@@ -31,7 +31,6 @@ export class RedisCacheRepository
   ): Promise<Entities[T][]> {
     await this.connect();
     const keys: string[] = await this.findAllEntityKeys(entityType);
-    console.log('keys', keys);
     return Promise.all(keys.map(this.retrieveFromKey.bind(this))) as Promise<
       Entities[T][]
     >;
@@ -57,7 +56,6 @@ export class RedisCacheRepository
     const { id, ...rest } = entity;
     const key = `${type}:${id}`;
     for (const [field, value] of Object.entries(rest)) {
-      console.log('set', key, field, value);
       multi.hSet(key, field, value);
     }
     multi.exec();
