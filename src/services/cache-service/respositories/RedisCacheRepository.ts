@@ -16,7 +16,9 @@ export class RedisCacheRepository
 
   constructor() {
     super();
-    this.client = createClient();
+    this.client = createClient({
+      password: 'password',
+    });
     this.client.emit = this.emit.bind(this.client);
   }
 
@@ -31,9 +33,9 @@ export class RedisCacheRepository
   ): Promise<Entities[T][]> {
     await this.connect();
     const keys: string[] = await this.findAllEntityKeys(entityType);
-    return Promise.all(keys.map(this.retrieveFromKey.bind(this))) as Promise<
-      Entities[T][]
-    >;
+    return (await Promise.all(
+      keys.map(this.retrieveFromKey.bind(this)),
+    )) as Entities[T][];
   }
 
   // getOne<T extends keyof Entities>(id: string, type: T): Promise<Entities[T]> {
@@ -58,7 +60,7 @@ export class RedisCacheRepository
     for (const [field, value] of Object.entries(rest)) {
       multi.hSet(key, field, value);
     }
-    multi.exec();
+    await multi.exec();
     return;
   }
 
@@ -78,6 +80,22 @@ export class RedisCacheRepository
       cursor = Number(scanReply['cursor']);
     }
     return results;
+  }
+
+  async getEntityCount(entityType: keyof Entities): Promise<number> {
+    let count = 0;
+    let cursor: null | number = null;
+    while (cursor !== 0) {
+      const scanReply: {
+        keys: string[];
+        cursor: number;
+      } = await this.client
+        .scan(cursor || 0, { MATCH: `${entityType}:*` })
+        .then();
+      count++;
+      cursor = Number(scanReply['cursor']);
+    }
+    return count;
   }
 
   private retrieveFromKey(key: string): Promise<Record<string, unknown>> {
