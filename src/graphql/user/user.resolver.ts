@@ -4,7 +4,7 @@ import { RedisCacheRepository } from '../../services';
 import { User } from './user.model';
 
 @Resolver((of: unknown) => User)
-export class AuthorsResolver {
+export class UsersResolver {
   constructor(private redisCacheRepository: RedisCacheRepository) {}
 
   @Query((returns) => Int)

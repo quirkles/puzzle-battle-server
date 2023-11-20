@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 
 import { createClient } from '@redis/client';
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { Entities } from '../entities';
 import { CacheRepository } from './CacheRepository';
@@ -12,6 +12,8 @@ export class RedisCacheRepository
   extends EventEmitter
   implements CacheRepository
 {
+  private readonly logger = new Logger(RedisCacheRepository.name);
+
   private client;
 
   constructor() {
@@ -22,9 +24,19 @@ export class RedisCacheRepository
     this.client.emit = this.emit.bind(this.client);
   }
 
-  private async connect() {
+  private async connect(): Promise<Error | void> {
     if (!this.client.isOpen) {
-      await this.client.connect();
+      return await this.client.connect().catch((err) => {
+        this.logger.error('Failed to connect:');
+        if (err instanceof AggregateError) {
+          for (const error of err.errors) {
+            this.logger.error(error);
+          }
+        } else {
+          this.logger.error(err);
+        }
+        return err;
+      });
     }
   }
 
@@ -83,6 +95,10 @@ export class RedisCacheRepository
   }
 
   async getEntityCount(entityType: keyof Entities): Promise<number> {
+    const error = await this.connect();
+    if (error) {
+      throw error;
+    }
     let count = 0;
     let cursor: null | number = null;
     while (cursor !== 0) {
@@ -92,7 +108,7 @@ export class RedisCacheRepository
       } = await this.client
         .scan(cursor || 0, { MATCH: `${entityType}:*` })
         .then();
-      count++;
+      count += scanReply.keys.length;
       cursor = Number(scanReply['cursor']);
     }
     return count;

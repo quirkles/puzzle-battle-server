@@ -7,6 +7,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RedisCacheRepository } from './services';
+import { UsersResolver } from './graphql/user/user.resolver';
 
 @Module({
   imports: [
@@ -16,6 +17,6 @@ import { RedisCacheRepository } from './services';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, RedisCacheRepository],
+  providers: [AppService, RedisCacheRepository, UsersResolver],
 })
 export class AppModule {}
