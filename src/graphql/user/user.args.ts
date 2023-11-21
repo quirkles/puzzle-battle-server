@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { ArgsType, Field, InputType, Int } from '@nestjs/graphql';
 
-@ObjectType()
-export class User {
-  @Field((type) => String)
-  id: number;
-
+@InputType()
+export class CreateUserArgs {
   @Field()
   lichessUsername: string;
+
+  @Field({ nullable: true })
+  username: string;
 
   @Field()
   lichessId: string;

@@ -1,14 +1,27 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Int, Query, Resolver } from '@nestjs/graphql';
-import { RedisCacheRepository } from '../../services';
-import { User } from './user.model';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 
-@Resolver((of: unknown) => User)
+import { LiveUserRepository, UserRepository } from '../../services';
+import { UserEntity } from './user.entity';
+import { CreateUserArgs } from './user.args';
+
+@Resolver((of: unknown) => UserEntity)
 export class UsersResolver {
-  constructor(private redisCacheRepository: RedisCacheRepository) {}
+  constructor(
+    private liveUserRepository: LiveUserRepository,
+    private userRepository: UserRepository,
+  ) {}
 
   @Query((returns) => Int)
   async liveUserCount(): Promise<number> {
-    return this.redisCacheRepository.getEntityCount('User');
+    return this.liveUserRepository.getCount();
+  }
+
+  @Mutation((returns) => UserEntity)
+  async createUser(@Args('userData') createUserArgs: CreateUserArgs) {
+    if (!createUserArgs['username']) {
+      createUserArgs['username'] = createUserArgs.lichessUsername;
+    }
+    return this.userRepository.createUser(createUserArgs);
   }
 }

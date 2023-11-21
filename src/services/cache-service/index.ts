@@ -1,2 +1,2 @@
-export { RedisCacheRepository } from './respositories';
-export { Entities, UserEntity } from './entities';
+export { LiveUserRepository } from './respositories';
+export { RedisCacheService } from './RedisCacheService';

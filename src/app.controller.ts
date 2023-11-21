@@ -1,23 +1,24 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { v4 } from 'uuid';
-import { RedisCacheRepository, UserEntity } from './services';
+import { LiveUserRepository } from './services';
+import { Entities } from './models';
 
 @Controller()
 export class AppController {
-  constructor(private readonly cacheRepository: RedisCacheRepository) {}
+  constructor(private readonly liveUserRepository: LiveUserRepository) {}
 
   @Get('/allUsers')
-  async findAllUsers(): Promise<UserEntity[]> {
-    return await this.cacheRepository.getAll('User');
+  async findAllUsers(): Promise<Entities['User'][]> {
+    return await this.liveUserRepository.getAll();
   }
 
   @Post('/user')
-  async addUser(@Body() createUser: UserEntity): Promise<UserEntity> {
-    const user: UserEntity = {
+  async addUser(
+    @Body() createUser: Entities['User'],
+  ): Promise<Entities['User']> {
+    return this.liveUserRepository.addUser({
       ...createUser,
       id: v4(),
-    };
-    await this.cacheRepository.setOne(user, 'User');
-    return user;
+    });
   }
 }

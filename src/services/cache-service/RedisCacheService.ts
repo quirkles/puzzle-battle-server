@@ -1,20 +1,16 @@
 import { EventEmitter } from 'events';
 
 import { createClient } from '@redis/client';
-
 import { Injectable, Logger } from '@nestjs/common';
 
-import { Entities } from '../entities';
-import { CacheRepository } from './CacheRepository';
+import { Entities, Entity, EntityType } from '../../models';
+import { CacheService } from './CacheService';
 
 @Injectable()
-export class RedisCacheRepository
-  extends EventEmitter
-  implements CacheRepository
-{
-  private readonly logger = new Logger(RedisCacheRepository.name);
+export class RedisCacheService extends EventEmitter implements CacheService {
+  private readonly logger = new Logger(RedisCacheService.name);
 
-  private client;
+  private readonly client;
 
   constructor() {
     super();
@@ -40,9 +36,7 @@ export class RedisCacheRepository
     }
   }
 
-  async getAll<T extends keyof Entities>(
-    entityType: T,
-  ): Promise<Entities[T][]> {
+  async getAll<T extends EntityType>(entityType: T): Promise<Entities[T][]> {
     await this.connect();
     const keys: string[] = await this.findAllEntityKeys(entityType);
     return (await Promise.all(
@@ -61,7 +55,7 @@ export class RedisCacheRepository
   //   return Promise.resolve(undefined);
   // }
 
-  async setOne<T extends keyof Entities>(
+  async setOne<T extends EntityType>(
     entity: Entities[T],
     type: T,
   ): Promise<void> {
@@ -114,10 +108,13 @@ export class RedisCacheRepository
     return count;
   }
 
-  private retrieveFromKey(key: string): Promise<Record<string, unknown>> {
-    return this.client.hGetAll(key).then((body) => ({
-      ...body,
-      id: key.slice(key.indexOf(':') + 1),
-    }));
+  private retrieveFromKey<T extends Entity>(key: string): Promise<T> {
+    return this.client.hGetAll(key).then(
+      (body) =>
+        ({
+          ...body,
+          id: key.slice(key.indexOf(':') + 1),
+        }) as T,
+    );
   }
 }

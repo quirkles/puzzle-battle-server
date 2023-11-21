@@ -1,11 +1,10 @@
 import { EventEmitter } from 'events';
+import { Entities, EntityType } from '../../models';
 
-import { type Entities } from '../entities';
-
-export interface CacheRepository extends EventEmitter {
+export interface CacheService extends EventEmitter {
   // getOne<T extends keyof Entities>(id: string, type: T): Promise<Entities[T]>;
 
-  setOne<T extends keyof Entities>(
+  setOne<T extends EntityType>(
     entity: Omit<Entities[T], 'type'>,
     type: T,
   ): Promise<void>;

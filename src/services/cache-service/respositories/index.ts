@@ -1,1 +1,1 @@
-export { RedisCacheRepository } from './RedisCacheRepository';
+export { LiveUserRepository } from './LiveUserRepository';
