@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
+import { Collection } from 'mongodb';
+
 import { MongoService } from '../mongoService';
 import { User } from '../../../models/User';
 import { WithoutId } from '../../../typeUtils';
-import { Collection } from 'mongodb';
 import { modelSchemas } from '../../../models';
 
 @Injectable()
