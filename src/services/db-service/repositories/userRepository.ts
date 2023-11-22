@@ -4,6 +4,7 @@ import { MongoService } from '../mongoService';
 import { User } from '../../../models/User';
 import { WithoutId } from '../../../typeUtils';
 import { Collection } from 'mongodb';
+import { modelSchemas } from '../../../models';
 
 @Injectable()
 export class UserRepository {
@@ -20,7 +21,31 @@ export class UserRepository {
     return this.dbService.upsert('User', filter, update);
   }
 
-  _collection(): Collection {
+  handleLogin(createUserArgs: {
+    lichessPuzzleRating: number;
+    lichessUsername: string;
+    lichessId: string;
+  }) {
+    this._collection()
+      .findOneAndUpdate(
+        { lichessId: createUserArgs.lichessId },
+        {
+          $set: { ...createUserArgs },
+          $setOnInsert: {
+            username: createUserArgs.lichessUsername,
+          },
+        },
+        { upsert: true, returnDocument: 'after' },
+      )
+      .then((result) =>
+        modelSchemas['User'].parse({
+          ...result,
+          id: (result?._id || '').toString(),
+        }),
+      );
+  }
+
+  private _collection(): Collection {
     return this.dbService.getCollection('User');
   }
 }

@@ -20,23 +20,6 @@ export class UsersResolver {
 
   @Mutation((returns) => UserEntity)
   async loginUser(@Args('userData') createUserArgs: CreateUserArgs) {
-    return this.userRepository
-      ._collection()
-      .findOneAndUpdate(
-        { lichessId: createUserArgs.lichessId },
-        {
-          $set: { ...createUserArgs },
-          $setOnInsert: {
-            username: createUserArgs.lichessUsername,
-          },
-        },
-        { upsert: true, returnDocument: 'after' },
-      )
-      .then((result) =>
-        modelSchemas['User'].parse({
-          ...result,
-          id: (result?._id || '').toString(),
-        }),
-      );
+    return this.userRepository.handleLogin(createUserArgs);
   }
 }
