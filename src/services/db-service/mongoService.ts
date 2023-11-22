@@ -1,13 +1,12 @@
-import { MongoClient, ObjectId } from 'mongodb';
+import { Collection, MongoClient, ObjectId } from 'mongodb';
 
 import { DbService } from './dbService';
 import { Entities, EntityType, modelSchemas } from '../../models';
-import { util } from 'zod';
-import Omit = util.Omit;
+import { WithoutId } from '../../typeUtils';
 
 const connectionString = 'mongodb://localhost:27017';
 
-export class MongoService implements DbService {
+export class MongoService<T extends EntityType> implements DbService<T> {
   private readonly client: MongoClient;
   private readonly dbName = 'puzzle-battle';
 
@@ -15,7 +14,7 @@ export class MongoService implements DbService {
     this.client = new MongoClient(connectionString);
   }
 
-  async findByField<T extends EntityType, U extends keyof Entities[T]>(
+  async findByField<U extends keyof Entities[T]>(
     entityType: T,
     field: U,
     value: Entities[T][U],
@@ -30,10 +29,7 @@ export class MongoService implements DbService {
       .then((docs) => docs.map((d) => modelSchemas[entityType].parse(d)));
   }
 
-  getOneById<T extends EntityType>(
-    entityType: T,
-    id: string,
-  ): Promise<Entities[T] | null> {
+  getOneById(entityType: T, id: string): Promise<Entities[T] | null> {
     return this.client
       .db(this.dbName)
       .collection(entityType)
@@ -41,7 +37,7 @@ export class MongoService implements DbService {
       .then((doc) => modelSchemas[entityType].parse(doc));
   }
 
-  createOne<T extends EntityType>(
+  createOne(
     entityType: T,
     body: Omit<Entities[T], 'id'>,
   ): Promise<Entities[T]> {
@@ -55,5 +51,30 @@ export class MongoService implements DbService {
           id: result.insertedId.toString(),
         }),
       );
+  }
+
+  upsert(
+    entityType: T,
+    filter: Partial<WithoutId<Entities[T]>>,
+    body: Partial<WithoutId<Entities[T]>>,
+  ): Promise<Entities[T]> {
+    return this.client
+      .db(this.dbName)
+      .collection(entityType)
+      .findOneAndUpdate(
+        filter,
+        { $set: { ...body } },
+        { upsert: true, returnDocument: 'after' },
+      )
+      .then((result) =>
+        modelSchemas[entityType].parse({
+          ...body,
+          id: (result?._id || '').toString(),
+        }),
+      );
+  }
+
+  getCollection(entity: T): Collection {
+    return this.client.db(this.dbName).collection(entity);
   }
 }

@@ -3,8 +3,7 @@ import { faker } from '@faker-js/faker';
 
 import { User } from '../src/models/User';
 import { modelSchemas } from '../src/models';
-
-type WithoutId<T> = Omit<T, 'id'>;
+import { WithoutId } from '../src/typeUtils';
 
 const mongoClient = new MongoClient('mongodb://localhost:27017');
 

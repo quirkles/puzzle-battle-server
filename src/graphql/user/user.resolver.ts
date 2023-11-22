@@ -4,6 +4,7 @@ import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { LiveUserRepository, UserRepository } from '../../services';
 import { UserEntity } from './user.entity';
 import { CreateUserArgs } from './user.args';
+import { modelSchemas } from '../../models';
 
 @Resolver((of: unknown) => UserEntity)
 export class UsersResolver {
@@ -18,10 +19,24 @@ export class UsersResolver {
   }
 
   @Mutation((returns) => UserEntity)
-  async createUser(@Args('userData') createUserArgs: CreateUserArgs) {
-    if (!createUserArgs['username']) {
-      createUserArgs['username'] = createUserArgs.lichessUsername;
-    }
-    return this.userRepository.createUser(createUserArgs);
+  async loginUser(@Args('userData') createUserArgs: CreateUserArgs) {
+    return this.userRepository
+      ._collection()
+      .findOneAndUpdate(
+        { lichessId: createUserArgs.lichessId },
+        {
+          $set: { ...createUserArgs },
+          $setOnInsert: {
+            username: createUserArgs.lichessUsername,
+          },
+        },
+        { upsert: true, returnDocument: 'after' },
+      )
+      .then((result) =>
+        modelSchemas['User'].parse({
+          ...result,
+          id: (result?._id || '').toString(),
+        }),
+      );
   }
 }
