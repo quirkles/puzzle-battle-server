@@ -15,7 +15,7 @@ type Query {
 }
 
 type Mutation {
-  createUser(userData: CreateUserArgs!): UserEntity!
+  loginUser(userData: CreateUserArgs!): UserEntity!
 }
 
 input CreateUserArgs {
