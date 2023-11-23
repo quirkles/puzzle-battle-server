@@ -27,7 +27,7 @@ export class UserRepository {
     lichessUsername: string;
     lichessId: string;
   }) {
-    this._collection()
+    return this._collection()
       .findOneAndUpdate(
         { lichessId: createUserArgs.lichessId },
         {
