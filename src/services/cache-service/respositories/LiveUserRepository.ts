@@ -2,20 +2,28 @@ import { Injectable } from '@nestjs/common';
 
 import { RedisCacheService } from '../RedisCacheService';
 import { Entities } from '../../../models';
+import { GameType } from '../../../models/LiveUser';
 
 @Injectable()
 export class LiveUserRepository {
   constructor(private cacheService: RedisCacheService) {}
 
   getCount(): Promise<number> {
-    return this.cacheService.getEntityCount('User');
+    return this.cacheService.getEntityCount('LiveUser');
   }
 
-  getAll(): Promise<Entities['User'][]> {
-    return this.cacheService.getAll('User');
+  getAll(): Promise<Entities['LiveUser'][]> {
+    return this.cacheService.getAll('LiveUser');
   }
 
-  addUser(user: Entities['User']): Promise<Entities['User']> {
-    return this.cacheService.setOne(user, 'User').then(() => user);
+  async addUser(user: Entities['LiveUser']): Promise<Entities['LiveUser']> {
+    await this.cacheService.setOne(user, 'LiveUser');
+    return user;
+  }
+
+  startLookingForGame(userId: string, gameType: GameType) {
+    return this.cacheService.updateOne('LiveUser', userId, {
+      lookingForGame: gameType,
+    });
   }
 }

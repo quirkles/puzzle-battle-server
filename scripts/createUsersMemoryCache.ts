@@ -23,6 +23,7 @@ export async function createUsersMemoryCache(count: number): Promise<void> {
     const liveUser: LiveUser = {
       id: validated.id,
       lichessPuzzleRating: validated.lichessPuzzleRating,
+      lookingForGame: null,
     };
     await redisClient.hSet(
       `User:${validated.id}`,

@@ -70,6 +70,21 @@ export class RedisCacheService extends EventEmitter implements CacheService {
     return;
   }
 
+  async updateOne<T extends EntityType>(
+    type: T,
+    id: string,
+    update: Partial<Omit<Entities[T], 'id'>>,
+  ): Promise<void> {
+    await this.connect();
+    const multi = this.client.multi();
+    const key = `${type}:${id}`;
+    for (const [field, value] of Object.entries(update)) {
+      multi.hSet(key, field, value);
+    }
+    await multi.exec();
+    return;
+  }
+
   private async findAllEntityKeys(
     entityType: keyof Entities,
   ): Promise<string[]> {
