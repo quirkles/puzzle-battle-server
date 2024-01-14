@@ -14,6 +14,7 @@ import {
 } from './services';
 import { UsersResolver } from './graphql/user/user.resolver';
 import { EventsGateway } from './events/events.gateway';
+import { GameTypeResolver } from "./graphql/gameTypes/gameType.resolver";
 
 @Module({
   imports: [
@@ -33,6 +34,8 @@ import { EventsGateway } from './events/events.gateway';
     MongoService,
     //Resolvers
     UsersResolver,
+    GameTypeResolver,
+    // Sockets
     EventsGateway,
   ],
 })

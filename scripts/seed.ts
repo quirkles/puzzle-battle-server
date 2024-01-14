@@ -8,8 +8,8 @@ interface SeedArgs {
   liveUsersInCache?: number;
 }
 
-const defaultDbUsers = 1000;
-const defaultLiveUsersInCache = 100;
+const defaultDbUsers = 10000;
+const defaultLiveUsersInCache = 1000;
 
 async function main() {
   const args = parse<SeedArgs>({

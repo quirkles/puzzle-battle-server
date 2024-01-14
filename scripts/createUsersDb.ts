@@ -1,8 +1,7 @@
 import { MongoClient } from 'mongodb';
 import { faker } from '@faker-js/faker';
 
-import { User } from '../src/models/User';
-import { modelSchemas } from '../src/models';
+import { User, modelSchemas } from '../src/models';
 import { WithoutId } from '../src/typeUtils';
 
 const mongoClient = new MongoClient('mongodb://localhost:27017');
