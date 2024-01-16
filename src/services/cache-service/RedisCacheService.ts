@@ -44,17 +44,6 @@ export class RedisCacheService extends EventEmitter implements CacheService {
     )) as Entities[T][];
   }
 
-  // getOne<T extends keyof Entities>(id: string, type: T): Promise<Entities[T]> {
-  //   return Promise.resolve({} as any);
-  // }
-  //
-  // setMany<T extends keyof Entities>(
-  //   entity: Entities[T][],
-  //   type: T,
-  // ): Promise<void> {
-  //   return Promise.resolve(undefined);
-  // }
-
   async setOne<T extends EntityType>(
     entity: Entities[T],
     type: T,
@@ -64,6 +53,21 @@ export class RedisCacheService extends EventEmitter implements CacheService {
     const { id, ...rest } = entity;
     const key = `${type}:${id}`;
     for (const [field, value] of Object.entries(rest)) {
+      multi.hSet(key, field, value);
+    }
+    await multi.exec();
+    return;
+  }
+
+  async updateOne<T extends EntityType>(
+    type: T,
+    id: string,
+    update: Partial<Omit<Entities[T], 'id'>>,
+  ): Promise<void> {
+    await this.connect();
+    const multi = this.client.multi();
+    const key = `${type}:${id}`;
+    for (const [field, value] of Object.entries(update)) {
       multi.hSet(key, field, value);
     }
     await multi.exec();
@@ -108,13 +112,16 @@ export class RedisCacheService extends EventEmitter implements CacheService {
     return count;
   }
 
-  private retrieveFromKey<T extends Entity>(key: string): Promise<T> {
-    return this.client.hGetAll(key).then(
-      (body) =>
-        ({
-          ...body,
-          id: key.slice(key.indexOf(':') + 1),
-        }) as T,
-    );
+  async raw(commands: string[]): Promise<unknown> {
+    await this.connect();
+    return this.client.sendCommand(commands);
+  }
+
+  private async retrieveFromKey<T extends Entity>(key: string): Promise<T> {
+    const body = await this.client.hGetAll(key);
+    return {
+      ...body,
+      id: key.slice(key.indexOf(':') + 1),
+    } as T;
   }
 }

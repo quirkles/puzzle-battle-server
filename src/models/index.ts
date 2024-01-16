@@ -15,3 +15,6 @@ export const modelSchemas: { [T in EntityType]: ZodSchema<Entities[T]> } = {
 } as const;
 
 export type Entity = Entities[keyof Entities];
+
+export * from './User';
+export * from './LiveUser';

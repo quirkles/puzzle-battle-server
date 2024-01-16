@@ -2,6 +2,20 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type GameType {
+  type: GameTypeEnum!
+  activePlayerCount: Float!
+}
+
+enum GameTypeEnum {
+  wins_3
+  wins_4
+  wins_5
+  time_1_min
+  time_2_mins
+  time_3_mins
+}
+
 type UserEntity {
   id: String!
   lichessUsername: String!
@@ -12,6 +26,7 @@ type UserEntity {
 
 type Query {
   liveUserCount: Int!
+  liveSummary: [GameType!]!
 }
 
 type Mutation {

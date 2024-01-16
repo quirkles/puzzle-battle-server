@@ -1,7 +1,8 @@
 import { createClient } from '@redis/client';
 import { MongoClient } from 'mongodb';
-import { modelSchemas } from '../src/models';
-import { LiveUser } from '../src/models/LiveUser';
+import { LiveUser, modelSchemas } from '../src/models';
+import { getRandomKey } from '../src/utils';
+import { GameTypeEnum } from '../src/graphql/gameTypes/gameType.entity';
 
 const redisClient = createClient({
   password: 'password',
@@ -10,25 +11,42 @@ const redisClient = createClient({
 const mongoClient = new MongoClient('mongodb://localhost:27017');
 
 export async function createUsersMemoryCache(count: number): Promise<void> {
+  // Fetch users
   await mongoClient.connect();
-  await redisClient.connect();
   const users = await mongoClient
     .db('puzzle-battle')
     .collection('User')
     .aggregate([{ $sample: { size: count } }])
     .toArray();
+
+  // Add to redis
+  await redisClient.connect();
   for (const user of users) {
-    user['id'] = user['_id'].toString();
-    const validated = modelSchemas['User'].parse(user);
-    const liveUser: LiveUser = {
-      id: validated.id,
-      lichessPuzzleRating: validated.lichessPuzzleRating,
-    };
+    const lookingForGame =
+      Math.random() < 0.8 ? null : getRandomKey(GameTypeEnum);
+    const liveUser: LiveUser = modelSchemas['LiveUser'].parse({
+      id: user['_id'].toString(),
+      lichessPuzzleRating: user.lichessPuzzleRating,
+      lookingForGame,
+      isLookingForGame: lookingForGame ? 'TRUE' : 'FALSE',
+    });
     await redisClient.hSet(
-      `User:${validated.id}`,
+      `LiveUser:${liveUser.id}`,
       'lichessPuzzleRating',
       liveUser.lichessPuzzleRating,
     );
+    await redisClient.hSet(
+      `LiveUser:${liveUser.id}`,
+      'isLookingForGame',
+      liveUser.isLookingForGame,
+    );
+    if (liveUser.lookingForGame) {
+      await redisClient.hSet(
+        `LiveUser:${liveUser.id}`,
+        'lookingForGame',
+        liveUser.lookingForGame,
+      );
+    }
   }
   await mongoClient.close();
   await redisClient.disconnect();
