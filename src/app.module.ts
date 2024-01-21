@@ -14,7 +14,7 @@ import {
 } from './services';
 import { UsersResolver } from './graphql/user/user.resolver';
 import { EventsGateway } from './events/events.gateway';
-import { GameTypeResolver } from "./graphql/gameTypes/gameType.resolver";
+import { GameTypeResolver } from './graphql/gameTypes/gameType.resolver';
 
 @Module({
   imports: [

@@ -68,7 +68,10 @@ export class RedisCacheService extends EventEmitter implements CacheService {
     const multi = this.client.multi();
     const key = `${type}:${id}`;
     for (const [field, value] of Object.entries(update)) {
-      multi.hSet(key, field, value);
+      if (value) {
+        multi.hSet(key, field, value);
+      }
+      multi.hDel(key, field);
     }
     await multi.exec();
     return;
