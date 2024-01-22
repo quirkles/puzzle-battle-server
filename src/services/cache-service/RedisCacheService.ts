@@ -64,14 +64,20 @@ export class RedisCacheService extends EventEmitter implements CacheService {
     id: string,
     update: Partial<Omit<Entities[T], 'id'>>,
   ): Promise<void> {
+    console.log('type', type);
+    console.log('id', id);
+    console.log('update', update);
     await this.connect();
     const multi = this.client.multi();
     const key = `${type}:${id}`;
     for (const [field, value] of Object.entries(update)) {
       if (value) {
+        console.log(`SET: ${field}=${value} for key: ${key}`);
         multi.hSet(key, field, value);
+      } else {
+        console.log(`DEL: ${field} for key: ${key}`);
+        multi.hDel(key, field);
       }
-      multi.hDel(key, field);
     }
     await multi.exec();
     return;
